@@ -1,0 +1,61 @@
+version: '3'
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - /volume1/docker/home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - "/volume1/docker/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf"
+      - "/volume1/docker/mosquitto/data:/mosquitto/data"
+      - "/volume1/docker/mosquitto/log/mosquitto.log:/mosquitto/log/mosquitto.log"
+    restart: unless-stopped
+    stdin_open: true 
+    tty: true
+  openwakeword:
+    container_name: openwakeword
+    image: "rhasspy/wyoming-openwakeword"
+    ports: 
+      - 10400:10400 
+    stdin_open: true 
+    tty: true
+    environment:
+      - preload-model=ok_nabu
+    labels:
+      preload-model: "ok_nabu"
+  wyoming-piper:
+    container_name: wyoming-piper
+    image: rhasspy/wyoming-piper
+    ports:
+      - 10200:10200
+    volumes:
+      - "/volume1/docker/piper/data:/data"
+    command: [ "--voice", "en-gb-southern_english_female-low" ]
+    restart: unless-stopped
+  wyoming-whisper:
+    container_name: wyoming-whisper
+    image: rhasspy/wyoming-whisper
+    ports:
+      - 10300:10300
+    volumes:
+      - "/volume1/docker/whisper/data:/data"
+    restart: unless-stopped
+    stdin_open: true 
+    tty: true
+    command: [ "--model", "tiny-int8", "--language", "en" ]
+    environment:
+      - model=tiny-int8
+      - language=en
+    labels:
+      model: "tiny-int8"
+      language: "en"
